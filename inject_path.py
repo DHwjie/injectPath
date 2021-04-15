@@ -12,7 +12,7 @@ total_num_truckfile = len(truck_file_list)
 # 列表内容显示
 # print(truck_file_list)
 
-path_data = [[] for i in range(276)]
+path_data = [[] for i in range(total_num_truckfile)]
 
 # print(path_data)
 
