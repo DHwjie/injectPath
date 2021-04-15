@@ -18,7 +18,7 @@ path_data = [[] for i in range(total_num_truckfile)]
 
 # 遍历文件，将轨迹信息读入path_data[]列表中
 for i in range(total_num_truckfile):
-    file_name = os.getcwd() + '\\truck\\' + truck_file_list[i]
+    file_name = os.getcwd() + '/truck/' + truck_file_list[i]
     # print(file_name)
     with open(file_name, mode='r', encoding='utf-8') as f:
         data_temp = f.readlines()
@@ -96,7 +96,7 @@ while (True):
                         # 去重
                         dic = list(set([tuple(t) for t in inject_data]))
                         inject_data = [list(v) for v in dic]
-                        inject_data.sort(key=lambda data: data[0])
+                        inject_data.sort(key=lambda data: data[1])
                         # print(inject_data)
                         min_len = temp_len - len(inject_data)
             else:
