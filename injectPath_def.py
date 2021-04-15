@@ -97,7 +97,7 @@ def inject():
     print(path_data[0][0])
     init_num = int(input('请输入初始传染源标号(0-276)：').strip())
     print(init_num)
-    print(type(init_num))
+    #print(type(init_num))
     injectCheck(path_data, init_num)
 
 
