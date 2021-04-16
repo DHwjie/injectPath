@@ -3,15 +3,23 @@ import os
 from os import listdir
 import copy
 
+"""
+函数:readData函数
+
+说明：数据读取函数；
+        实现功能：把轨迹数据按照文件内容进行读入，并进行格式化排序
+        将truck里的数据导入，并对其数据格式化排序(增序)
+            格式化后的数据实例：[1, 1, 23.845089, 38.01847]...
+
+Parameters:
+    无
+Returns:
+    data -- type = ’list‘
+    将处理好的轨迹数据进行返回
+"""
+
 
 def readData():
-    """
-    功能：实现truck数据的读入与格式化排序，以满足后续使用
-    参数：无
-    返回值：data
-    其它介绍：将truck里的数据导入，并对其数据格式化排序(增序)
-            格式化后的数据实例：[1, 1, 23.845089, 38.01847]
-    """
     # 读取truck文件中文件名，truck_file_list用于保存
     truck_file_list = listdir('truck')
     # 列表内容显示
@@ -45,6 +53,28 @@ def readData():
     return data
 
 
+"""
+函数:injectCheck函数
+
+说明：传染模式挖掘函数；
+        实现功能：当用户选择初始传染源编号后，将初始传染源加入inject_total_data（含有初始传染源信息）列表中，然后进行初始传染的挖掘
+                将挖掘信息存入inject_data（不含初始传染源信息）列表中，然后对inject_data中的被感染对象继续进行传染挖掘
+                该函数内部，模拟实现了病毒传染的潜伏期delay_time、接触时长range_time和感染距离inject_distance。
+                1.潜伏期:采用占用的时间节点来表示，程序中用2个时间节点来表示潜伏期为2，
+                  程序中判断2个时间节点后，被感染体是否还有轨迹数据，若有则保存，若无则跳过
+                2.接触时长：采用path_data[i][j-1],path_data[i][j]和path_data[i][j+1]三个时间节点进行测算欧氏距离，
+                  选择三个结果中最大值，将其与inject_distance比较，最大值小于感染距离，则发生感染行为
+                3.inject_distance模拟感染距离，建议浮动值在0.0001-0.0002
+Parameters:
+    data -- type = ’list‘ :是轨迹数据集
+    initnum -- type = ’int‘：用户输入的初始传染源编号
+    
+Returns:
+    retData -- type = ’list‘
+    将处理好的感染数据进行返回
+"""
+
+
 def injectCheck(data, initnum):
     path_data = data
     # 初始传染源编号
@@ -60,7 +90,9 @@ def injectCheck(data, initnum):
     # 初始化被感染的传染源列表（不含初始传染源），并置空
     inject_data = []
     inject_total_data.append(path_data[first_num][0])
-    print(inject_total_data)
+    # print(inject_total_data)
+
+    # 进行初始传染源的传染挖掘
     count = 0
     for i in range(len(path_data)):
         for j in range(1, min(len(path_data[i]) - 1, len(path_data[first_num])) - 1):
@@ -78,15 +110,18 @@ def injectCheck(data, initnum):
             temp_distance_x3 = (path_data[i][j + 1][2] - path_data[first_num][j + 1][2]) ** 2
             temp_distance_y3 = (path_data[i][j + 1][3] - path_data[first_num][j + 1][3]) ** 2
             temp_distance3 = (temp_distance_x3 + temp_distance_y3) ** 0.5
+            # 测算距离，选择最大值
             temp_distance = max(temp_distance1, temp_distance2, temp_distance3)
+            # 将最大值与感染距离进行比较，比其小则发生传染行为。temp_distance != 0.0，是为了去除传染源本身
             if (temp_distance <= inject_distance) & (temp_distance != 0.0):
                 print(path_data[i][j][0], '号与', path_data[first_num][j][0], '号，在时间点：', path_data[i][j][1],
                       '处发生传染行为，传染距离为：', temp_distance)
                 count = count + 1
+                # 将被初始传染源感染的数据添加到inject_total_data中
                 inject_total_data.append(path_data[i][j])
                 # 此处加判断潜伏期内容，判读时间点加delay_time后是否还在即可，如果不在，就直接去掉了
                 if (path_data[i][j][1] + delay_time) < (len(path_data[i]) - 1):
-                    inject_data.append(path_data[i][j])
+                    inject_data.append(path_data[i][j + delay_time])
                 else:
                     break
                 break
@@ -94,9 +129,12 @@ def injectCheck(data, initnum):
     # print(inject_data)
 
     while (True):
+        # 长度标记点，当去重后的inject_data长度不变（为0）时退出while循环
         flag_len = 0
-        count = len(inject_data)
-        temp_len = count
+        # 循环更新inject_data长度记录
+        temp_len = len(inject_data)
+
+        # 在已有的inject_data数据集中进行模式挖掘
         for i in range(len(inject_data)):
             # print('传染源数据：', inject_data[i])
             # 传染源数据的编号
@@ -124,23 +162,26 @@ def injectCheck(data, initnum):
                         if (temp_distance <= inject_distance) & (temp_distance != 0.0):
                             # print(path_data[i2][j2], '与', path_data[flag_num][j2], '的距离为：', temp_distance)
                             print(path_data[i2][j2][0], '号与', path_data[flag_num][j2][0], '号，在时间点：',
-                                  path_data[i2][j2][1],
-                                  '处发生传染行为，传染距离为：', temp_distance)
+                                  path_data[i2][j2][1], '处发生传染行为，传染距离为：', temp_distance)
+                            # 将被传染源感染的数据添加到inject_total_data中
                             inject_total_data.append(path_data[i2][j2])
                             # 去重
                             dic = list(set([tuple(t) for t in inject_total_data]))
                             inject_total_data = [list(v) for v in dic]
+                            # 排序
                             inject_total_data.sort(key=lambda x: [x[0], x[1]])
+                            # 此处加判断潜伏期内容，判读时间点加delay_time后是否还在即可，如果不在，就直接去掉了
                             if (path_data[i2][j2][1] + delay_time) < (len(path_data[i2]) - 1):
-                                inject_data.append(path_data[i2][j2])
+                                inject_data.append(path_data[i2][j2 + delay_time])
                                 # 去重
                                 dic = list(set([tuple(t) for t in inject_data]))
                                 inject_data = [list(v) for v in dic]
+                                # 排序
                                 inject_data.sort(key=lambda x: [x[0], x[1]])
                             else:
                                 break
                             # print('传染源数据列表：',inject_data)
-                            print('传染源数据列表长度：', len(inject_data))
+                            # print('传染源数据列表长度：', len(inject_data))
                             flag_len = temp_len - len(inject_data)
                 else:
                     # print(path_data[i2][0],'一共',len(path_data[i2]),'行,i_t=',flag_inject_time)
@@ -151,13 +192,32 @@ def injectCheck(data, initnum):
     # print(len(inject_total_data))
     # print('除去初始传染源：', inject_data)
     # print(len(inject_data))
-    return inject_total_data
+    retData = setData(inject_total_data)
+    return retData
+
+
+"""
+函数:setData函数
+
+说明：数据处理函数；
+        实现功能：把挖掘后简单去重的数据结果进行深度去重和排序
+        例如，当injectdata=[[1,2,x.xxx,x.xxx],[1,4,x.xxx,x.xxx],[2,3,x.xxx,x.xxx]...]这样的数据时
+        通过本函数实现保留：[[1,2,x.xxx,x.xxx],[2,3,x.xxx,x.xxx]...]的结果
+        
+Parameters:
+    injectdata -- type = ’list‘
+    接收一个数据列表，进行函数内部操作
+
+Returns:
+    li -- type = ’list‘
+    将处理好的感染数据进行返回
+"""
 
 
 def setData(injectdata):
     li = []
     li.append(injectdata[0])
-    for i in range(1, len(injectdata) - 1):
+    for i in range(1, len(injectdata)):
         if injectdata[i][0] != injectdata[i - 1][0]:
             li.append(injectdata[i])
         else:
@@ -166,20 +226,47 @@ def setData(injectdata):
     return li
 
 
+"""
+函数:inject函数
+说明：程序运行的主函数，执行步骤：
+        1.先调用readData()载入truck数据文件下的轨迹数据信息
+        2.由用户输入想要作为初始传染源的编号
+        3.将（1）中载入的数据和初始传染源编号作为参数，调用injeCheck()函数进行传染模式挖掘
+        4.将挖掘返回的信息格式化显示
+
+Parameters:
+    None
+Returns:
+    None
+"""
+
+
 def inject():
     path_data = readData()
     # print(len(path_data))
-    # print(path_data[0][0])
+
+    # 用户输入
     init_num = int(input('请输入初始传染源标号(1-276)：').strip())
     # print(init_num)
-    # print(type(init_num))
+
+    # 进行传染挖掘injectData接收挖掘后返回的数据
     injectData = injectCheck(path_data, init_num)
-    injectData = setData(injectData)
-    print(injectData)
+    # injectData = setData(injectData)
+
+    print('所有感染数据：',*injectData)
     print('共计感染{}人！'.format(len(injectData)))
     # for num in injectData:
     print('编号分别为：', *[num[0] for num in injectData])
 
 
+"""
+函数:’main‘
+说明：程序运行入口，调用inject函数进行运行
+
+Parameters:
+    None 
+Returns:
+    None  
+"""
 if __name__ == '__main__':
     inject()
