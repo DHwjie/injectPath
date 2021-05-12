@@ -62,7 +62,7 @@ def readData():
                 该函数内部，模拟实现了病毒传染的潜伏期delay_time、接触时长range_time和感染距离inject_distance。
                 1.潜伏期:采用占用的时间节点来表示，程序中用2个时间节点来表示潜伏期为2，
                   程序中判断2个时间节点后，被感染体是否还有轨迹数据，若有则保存，若无则跳过
-                2.接触时长：采用path_data[i][j-1],path_data[i][j]和path_data[i][j+1]三个时间节点进行测算欧氏距离，
+                2.接触时长：采用path_data[i][j-2],path_data[i][j-1]和path_data[i][j]三个时间节点进行测算欧氏距离，
                   选择三个结果中最大值，将其与inject_distance比较，最大值小于感染距离，则发生感染行为
                 3.inject_distance模拟感染距离，建议浮动值在0.0001-0.0002
 Parameters:
@@ -95,20 +95,20 @@ def injectCheck(data, initnum):
     # 进行初始传染源的传染挖掘
     count = 0
     for i in range(len(path_data)):
-        for j in range(1, min(len(path_data[i]) - 1, len(path_data[first_num])) - 1):
+        for j in range(2, min(len(path_data[i]) - 1, len(path_data[first_num]))):
             """
                 增加三个时间节点内的距离判断（前后各一个），调整循化范围，使得从第二个时间点开始判断到倒数第二个时间点，
                 然后算三个时间点内的距离，如果最大的时间节点的位置都可以满足要求，其前后各个时间点位置的也都可以满足时距离要求
                 此时保存最先的那个点即可
             """
-            temp_distance_x1 = (path_data[i][j - 1][2] - path_data[first_num][j - 1][2]) ** 2
-            temp_distance_y1 = (path_data[i][j - 1][3] - path_data[first_num][j - 1][3]) ** 2
+            temp_distance_x1 = (path_data[i][j - 2][2] - path_data[first_num][j - 2][2]) ** 2
+            temp_distance_y1 = (path_data[i][j - 2][3] - path_data[first_num][j - 2][3]) ** 2
             temp_distance1 = (temp_distance_x1 + temp_distance_y1) ** 0.5
-            temp_distance_x2 = (path_data[i][j][2] - path_data[first_num][j][2]) ** 2
-            temp_distance_y2 = (path_data[i][j][3] - path_data[first_num][j][3]) ** 2
+            temp_distance_x2 = (path_data[i][j - 1][2] - path_data[first_num][j - 1][2]) ** 2
+            temp_distance_y2 = (path_data[i][j - 1][3] - path_data[first_num][j - 1][3]) ** 2
             temp_distance2 = (temp_distance_x2 + temp_distance_y2) ** 0.5
-            temp_distance_x3 = (path_data[i][j + 1][2] - path_data[first_num][j + 1][2]) ** 2
-            temp_distance_y3 = (path_data[i][j + 1][3] - path_data[first_num][j + 1][3]) ** 2
+            temp_distance_x3 = (path_data[i][j][2] - path_data[first_num][j][2]) ** 2
+            temp_distance_y3 = (path_data[i][j][3] - path_data[first_num][j][3]) ** 2
             temp_distance3 = (temp_distance_x3 + temp_distance_y3) ** 0.5
             # 测算距离，选择最大值
             temp_distance = max(temp_distance1, temp_distance2, temp_distance3)
@@ -143,19 +143,19 @@ def injectCheck(data, initnum):
             flag_inject_time = inject_data[i][1]
             for i2 in range(len(path_data)):
                 if (len(path_data[i2]) > flag_inject_time):
-                    for j2 in range(flag_inject_time + delay_time,
-                                    min(len(path_data[flag_num]), len(path_data[i2]) - 1) - 1):
+                    for j2 in range(flag_inject_time ,
+                                    min(len(path_data[flag_num]), len(path_data[i2]) - 1) - 2):
                         # 欧式距离 和我们中学所学的（x1,y1），（x2,y2）计算的距离一样 根号下[（x1-x2）²+(y1-y2)²]
                         # temp_distance = (((path_data[i2][j2][2] - path_data[flag_num][j2][2]) ** 2) + (
                         #     (path_data[i2][j2][3] - path_data[flag_num][j2][3])) ** 2) ** 0.5
-                        temp_distance_x1 = (path_data[i2][j2 - 1][2] - path_data[flag_num][j2 - 1][2]) ** 2
-                        temp_distance_y1 = (path_data[i2][j2 - 1][3] - path_data[flag_num][j2 - 1][3]) ** 2
+                        temp_distance_x1 = (path_data[i2][j2 - 2][2] - path_data[flag_num][j2 - 2][2]) ** 2
+                        temp_distance_y1 = (path_data[i2][j2 - 2][3] - path_data[flag_num][j2 - 2][3]) ** 2
                         temp_distance1 = (temp_distance_x1 + temp_distance_y1) ** 0.5
-                        temp_distance_x2 = (path_data[i2][j2][2] - path_data[flag_num][j2][2]) ** 2
-                        temp_distance_y2 = (path_data[i2][j2][3] - path_data[flag_num][j2][3]) ** 2
+                        temp_distance_x2 = (path_data[i2][j2 - 1][2] - path_data[flag_num][j2 - 1][2]) ** 2
+                        temp_distance_y2 = (path_data[i2][j2 - 1][3] - path_data[flag_num][j2 - 1][3]) ** 2
                         temp_distance2 = (temp_distance_x2 + temp_distance_y2) ** 0.5
-                        temp_distance_x3 = (path_data[i2][j2 + 1][2] - path_data[flag_num][j2 + 1][2]) ** 2
-                        temp_distance_y3 = (path_data[i2][j2 + 1][3] - path_data[flag_num][j2 + 1][3]) ** 2
+                        temp_distance_x3 = (path_data[i2][j2][2] - path_data[flag_num][j2][2]) ** 2
+                        temp_distance_y3 = (path_data[i2][j2][3] - path_data[flag_num][j2][3]) ** 2
                         temp_distance3 = (temp_distance_x3 + temp_distance_y3) ** 0.5
                         temp_distance = max(temp_distance1, temp_distance2, temp_distance3)
                         # print(path_data[i2][j2], '与', path_data[flag_num][j2], '的距离为：', temp_distance)
